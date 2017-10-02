@@ -1104,7 +1104,7 @@ createUser (_ ::: _ ::: req) = do
     let lang  = userLocale usr
     lift $ do
         for_ (liftM2 (,) (userEmail usr) epair) $ \(e, p) ->
-            sendActivationMail e (userName usr) p (Just lang) Nothing
+            sendActivationEmail e (userName usr) p (Just lang) (newUserTeam new)
         for_ (liftM2 (,) (userPhone usr) ppair) $ \(p, c) ->
             sendActivationSms p c (Just lang)
     cok <- lift $ Auth.newCookie (userId usr) PersistentCookie (newUserLabel new)
@@ -1112,6 +1112,9 @@ createUser (_ ::: _ ::: req) = do
         $ setStatus status201
         . addHeader "Location" (toByteString' (userId usr))
         $ json (SelfProfile usr)
+  where
+    sendActivationEmail e u p l (Just t) = sendTeamActivationMail e u p l (t^.newTeamName)
+    sendActivationEmail e u p l _        = sendActivationEmail e u p l Nothing
 
 createUserNoVerify :: JSON ::: JSON ::: Request -> Handler Response
 createUserNoVerify (_ ::: _ ::: req) = do

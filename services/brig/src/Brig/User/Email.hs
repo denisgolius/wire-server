@@ -5,6 +5,8 @@ module Brig.User.Email
     ( ActivationEmail (..)
     , sendActivationMail
 
+    , sendTeamActivationMail
+
     , PasswordResetEmail (..)
     , sendPasswordResetMail
 
@@ -67,6 +69,14 @@ sendNewClientEmail :: Name -> Email -> Client -> Locale -> AppIO ()
 sendNewClientEmail name email client locale = do
     tpl <- newClientEmail . snd <$> userTemplates (Just locale)
     Aws.sendMail $ renderNewClientEmail tpl (NewClientEmail locale email name client)
+
+sendTeamActivationMail :: Email -> Name -> ActivationPair -> Maybe Locale -> Text -> AppIO ()
+sendTeamActivationMail to name pair loc tname = do
+    tpl <- selectTemplate . snd <$> userTemplates loc
+    let mail = ActivationEmail to name pair
+    Aws.sendMail $ renderActivationMail mail tpl
+  where
+    selectTemplate = undefined
 
 -------------------------------------------------------------------------------
 -- New Client Email
